@@ -1,0 +1,45 @@
+<div class="stats-grid">
+  <!-- Card 1: Queued Resumes -->
+  <div class="glass-card stat-card">
+    <div class="stat-icon icon-queued">
+      <span class="material-symbols-rounded">hourglass_top</span>
+    </div>
+    <div class="stat-content">
+      <span class="stat-label">Queued Resumes</span>
+      <span class="stat-value">{{ stats?.totalJobs?.queued || 0 }}</span>
+    </div>
+  </div>
+
+  <!-- Card 2: Processed Resumes -->
+  <div class="glass-card stat-card">
+    <div class="stat-icon icon-completed">
+      <span class="material-symbols-rounded">task_alt</span>
+    </div>
+    <div class="stat-content">
+      <span class="stat-label">Processed Resumes</span>
+      <span class="stat-value">{{ stats?.totalJobs?.completed || 0 }}</span>
+    </div>
+  </div>
+
+  <!-- Card 3: Processing Resumes -->
+  <div class="glass-card stat-card">
+    <div class="stat-icon icon-processing">
+      <span class="material-symbols-rounded">sync</span>
+    </div>
+    <div class="stat-content">
+      <span class="stat-label">Processing Resumes</span>
+      <span class="stat-value">{{ stats?.totalJobs?.processing || 0 }}</span>
+    </div>
+  </div>
+
+  <!-- Card 4: Failed Resumes -->
+  <div class="glass-card stat-card">
+    <div class="stat-icon icon-failed">
+      <span class="material-symbols-rounded">error_outline</span>
+    </div>
+    <div class="stat-content">
+      <span class="stat-label">Failed Resumes</span>
+      <span class="stat-value">{{ stats?.totalJobs?.failed || 0 }}</span>
+    </div>
+  </div>
+</div>

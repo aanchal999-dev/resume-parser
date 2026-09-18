@@ -1,0 +1,89 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="glass-card modal-container">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        </svg>
+      </div>
+      <div>
+        <h3 class="modal-title">Create Target Job Role</h3>
+        <p class="modal-subtitle">Define required skills and seniority for candidate matching</p>
+      </div>
+      <button class="close-btn" (click)="closeModal.emit()">×</button>
+    </div>
+
+    <!-- Form Body -->
+    <div class="modal-body">
+      <!-- Field 1: Job Title -->
+      <div class="form-group">
+        <label class="form-label">Job Title *</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="e.g. Full Stack Developer, DevOps Engineer"
+          [(ngModel)]="title" />
+      </div>
+
+      <!-- Field 2: Skill Tags (Chip Input) -->
+      <div class="form-group">
+        <label class="form-label">Required Skills (Press Enter to Add) *</label>
+        <div class="skills-input-box" (click)="skillInput.focus()">
+          @for (skill of skills(); track skill) {
+            <span class="skill-chip">
+              <span>{{ skill }}</span>
+              <button class="chip-remove" (click)="removeSkill(skill); $event.stopPropagation()">×</button>
+            </span>
+          }
+          <input
+            #skillInput
+            type="text"
+            class="tag-input"
+            placeholder="{{ skills().length === 0 ? 'Type skill and press Enter (e.g. React, Node.js)' : 'Add more...' }}"
+            [(ngModel)]="currentSkillInput"
+            (keydown.enter)="addSkill($event)"
+            (keydown.,)="addSkill($event)" />
+        </div>
+        <p class="field-hint">Tip: Type a skill keyword and press Enter or comma.</p>
+      </div>
+
+      <!-- Field 3: Minimum Experience -->
+      <div class="form-group">
+        <div class="exp-header">
+          <label class="form-label">Minimum Experience</label>
+          <span class="exp-badge">{{ minExperience }} Year(s)</span>
+        </div>
+        <input
+          type="range"
+          min="0"
+          max="15"
+          step="1"
+          class="exp-slider"
+          [(ngModel)]="minExperience" />
+      </div>
+
+      @if (errorMessage()) {
+        <div class="error-banner">
+          <span>⚠️ {{ errorMessage() }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeModal.emit()">Cancel</button>
+      <button
+        class="btn btn-primary"
+        [disabled]="isSubmitting() || !title.trim() || skills().length === 0"
+        (click)="submitRole()">
+        @if (isSubmitting()) {
+          <span>Creating...</span>
+        } @else {
+          <span>Create Role Profile</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>

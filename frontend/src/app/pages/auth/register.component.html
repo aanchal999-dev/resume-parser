@@ -1,0 +1,79 @@
+<div class="auth-page-wrapper">
+  <div class="auth-card-container">
+    <!-- Brand Header -->
+    <div class="brand-center">
+      <div class="logo-box">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+      </div>
+      <h1 class="brand-title">Apex<span class="gradient-text">AI</span></h1>
+      <p class="brand-tagline">Recruiter Intelligence & Automated Resume Parsing</p>
+    </div>
+
+    <!-- Glassmorphism Register Card -->
+    <div class="glass-card auth-card">
+      <div class="card-title-group">
+        <h2 class="auth-title">Create Recruiter Account</h2>
+        <p class="auth-subtitle">Start matching top talent with automated AI scoring</p>
+      </div>
+
+      @if (errorMessage()) {
+        <div class="error-alert">
+          <span>⚠️ {{ errorMessage() }}</span>
+        </div>
+      }
+
+      <form (ngSubmit)="onSubmit()" class="auth-form">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Sarah Jenkins"
+            [(ngModel)]="name"
+            name="name"
+            required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Work Email</label>
+          <input
+            type="email"
+            class="form-control"
+            placeholder="sarah@apexrecruiting.com"
+            [(ngModel)]="email"
+            name="email"
+            required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input
+            type="password"
+            class="form-control"
+            placeholder="••••••••"
+            [(ngModel)]="password"
+            name="password"
+            required />
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary submit-btn"
+          [disabled]="isLoading() || !name || !email || !password">
+          @if (isLoading()) {
+            <div class="spinner-sm"></div>
+            <span>Creating Account...</span>
+          } @else {
+            <span>Register & Open Dashboard</span>
+          }
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Already have an account? <a routerLink="/login" class="auth-link">Sign In</a></p>
+      </div>
+    </div>
+  </div>
+</div>

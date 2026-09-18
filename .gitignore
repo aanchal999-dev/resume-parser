@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Environment files (Keep .env.example tracked)
+.env
+*.env
+!.env.example
+
+# Build outputs
+dist/
+AGENTS.md
+Checkpoints.md
+CLAUDE.md
+Decisions.md
+frontend/.vscode/
+frontend/public/favicon.ico
+worker/eng.traineddata
+worker/test_clean.pdf

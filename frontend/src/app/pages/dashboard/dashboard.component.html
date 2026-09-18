@@ -1,0 +1,54 @@
+<div class="dashboard-layout">
+  <!-- Navbar -->
+  <app-navbar></app-navbar>
+
+  <!-- Main Content Container -->
+  <main class="dashboard-main">
+    <div class="dashboard-container">
+      <!-- 1. Stats Summary Grid -->
+      <app-stats-grid [stats]="dashboardService.stats()"></app-stats-grid>
+
+      <!-- 2. Visual Analytics (ng2-charts) - Placed directly above the toolbar -->
+      <app-analytics-charts [stats]="dashboardService.stats()"></app-analytics-charts>
+
+      <!-- 3. Filter & Ranking Toolbar -->
+      <app-filter-bar
+        [jobRoles]="jobRoleService.jobRoles()"
+        [selectedRoleId]="selectedRoleId()"
+        [minMatchScore]="minMatchScore()"
+        [canExport]="dashboardService.matchedCandidates().length > 0"
+        (roleChanged)="onRoleChanged($event)"
+        (scoreChanged)="onScoreChanged($event)"
+        (openRoleModal)="showJobRoleModal.set(true)"
+        (openUploadModal)="showUploadModal.set(true)"
+        (exportCsv)="onExportCsv()">
+      </app-filter-bar>
+
+      <!-- 4. Candidate Rankings Table (Option 3 Empty State / Active Table) -->
+      <app-candidate-table
+        [candidates]="dashboardService.matchedCandidates()"
+        [selectedRoleId]="selectedRoleId()"
+        [minMatchScore]="minMatchScore()"
+        [isLoading]="dashboardService.isLoadingCandidates()"
+        (openRoleModal)="showJobRoleModal.set(true)"
+        (openUploadModal)="showUploadModal.set(true)">
+      </app-candidate-table>
+    </div>
+  </main>
+
+  <!-- Upload Modal with Live SSE Progress Tracker -->
+  @if (showUploadModal()) {
+    <app-upload-modal
+      (closeModal)="showUploadModal.set(false)"
+      (uploadCompleted)="onDataRefresh()">
+    </app-upload-modal>
+  }
+
+  <!-- Job Role Creation Modal -->
+  @if (showJobRoleModal()) {
+    <app-job-role-modal
+      (closeModal)="showJobRoleModal.set(false)"
+      (roleCreated)="onDataRefresh()">
+    </app-job-role-modal>
+  }
+</div>

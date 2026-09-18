@@ -1,0 +1,69 @@
+<div class="glass-card toolbar-card">
+  <div class="toolbar-left">
+    <!-- Job Role Selector -->
+    <div class="filter-group">
+      <label class="filter-label">Target Job Role</label>
+      <div class="select-wrapper">
+        <select
+          class="form-control role-select"
+          [ngModel]="selectedRoleId"
+          (ngModelChange)="onRoleChange($event)">
+          <option [ngValue]="null">-- Select a Job Role to Rank --</option>
+          @for (role of jobRoles; track role.id) {
+            <option [value]="role.id">{{ role.title }} (Min {{ role.minExperience }}y)</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- Min Match Score Slider -->
+    <div class="filter-group slider-group">
+      <div class="slider-header">
+        <label class="filter-label">Min Match Score</label>
+        <span class="score-badge" [class.active-score]="selectedRoleId">{{ minMatchScore }}%</span>
+      </div>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="5"
+        class="match-slider"
+        [disabled]="!selectedRoleId"
+        [(ngModel)]="minMatchScore"
+        (ngModelChange)="onScoreChange($event)" />
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="toolbar-right">
+    <button class="btn btn-secondary" (click)="openRoleModal.emit()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      <span>New Role</span>
+    </button>
+
+    <button class="btn btn-primary" (click)="openUploadModal.emit()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+      </svg>
+      <span>Upload Resumes</span>
+    </button>
+
+    <button
+      class="btn btn-outline"
+      [disabled]="!canExport"
+      (click)="exportCsv.emit()"
+      title="Export matched candidates to CSV">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      <span>Export CSV</span>
+    </button>
+  </div>
+</div>

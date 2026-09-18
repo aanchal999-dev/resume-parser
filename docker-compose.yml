@@ -138,7 +138,7 @@ services:
     networks:
       - resume_net
     volumes:
-      - frontend_build:/app/dist/frontend/browser
+      - frontend_build:/app/dist/resume-parser-frontend/browser
 
   # ==============================================================================
   # 7. Nginx Reverse Proxy API Gateway (Public Ingress on Port 80)

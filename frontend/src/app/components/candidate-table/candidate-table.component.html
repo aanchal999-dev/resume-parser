@@ -1,0 +1,144 @@
+<div class="candidate-section">
+  <!-- 1. OPTION 3: INITIAL EMPTY STATE (No Role Selected) -->
+  @if (!selectedRoleId) {
+    <div class="glass-card empty-state-card">
+      <div class="empty-icon-wrapper">
+        <div class="empty-icon-glow"></div>
+        <div class="empty-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="6"></circle>
+            <circle cx="12" cy="12" r="2"></circle>
+          </svg>
+        </div>
+      </div>
+      <h3 class="empty-title">Select a Job Role to Rank Candidates</h3>
+      <p class="empty-description">
+        Choose an existing target role from the dropdown above to calculate candidate fit percentages, or create a new job profile.
+      </p>
+      <div class="empty-actions">
+        <button class="btn btn-primary" (click)="openRoleModal.emit()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Create New Job Role</span>
+        </button>
+        <button class="btn btn-secondary" (click)="openUploadModal.emit()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+          <span>Upload Resumes</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- 2. LOADING STATE -->
+  @else if (isLoading) {
+    <div class="glass-card loading-card">
+      <div class="spinner"></div>
+      <p>Calculating candidate match percentages & ranking skills...</p>
+    </div>
+  }
+
+  <!-- 3. ACTIVE CANDIDATES TABLE -->
+  @else if (candidates.length > 0) {
+    <div class="glass-card table-card">
+      <div class="table-header-info">
+        <span class="match-count">{{ candidates.length }} Candidate(s) Matched</span>
+        <span class="threshold-tag">Threshold: &ge; {{ minMatchScore }}%</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Rank & Candidate</th>
+              <th>Match Score</th>
+              <th>Matched & Extracted Skills</th>
+              <th>Experience</th>
+              <th>Education</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (candidate of candidates; track candidate.id; let i = $index) {
+              <tr class="candidate-row">
+                <!-- Column 1: Candidate Name & Contact -->
+                <td>
+                  <div class="candidate-cell">
+                    <div class="rank-badge" [class.rank-top]="i === 0">#{{ i + 1 }}</div>
+                    <div class="candidate-details">
+                      <span class="candidate-name">{{ candidate.candidateName || 'Unnamed Candidate' }}</span>
+                      <span class="candidate-email">{{ candidate.email || 'No email provided' }}</span>
+                      @if (candidate.phone) {
+                        <span class="candidate-phone">{{ candidate.phone }}</span>
+                      }
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Column 2: Match Score Badge -->
+                <td>
+                  <div class="score-container">
+                    <div
+                      class="match-pill"
+                      [class.score-high]="candidate.matchPercentage >= 75"
+                      [class.score-med]="candidate.matchPercentage >= 50 && candidate.matchPercentage < 75"
+                      [class.score-low]="candidate.matchPercentage < 50">
+                      <span class="score-number">{{ candidate.matchPercentage }}%</span>
+                      <span class="score-label">Fit</span>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Column 3: Skills -->
+                <td>
+                  <div class="skills-wrap">
+                    <!-- Matched Skills (Green) -->
+                    @for (skill of candidate.matchingSkills; track skill) {
+                      <span class="badge badge-matched-skill">✓ {{ skill }}</span>
+                    }
+                    <!-- Other Skills (Slate) -->
+                    @for (skill of getUnmatchedSkills(candidate); track skill) {
+                      <span class="badge badge-unmatched-skill">{{ skill }}</span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Column 4: Experience -->
+                <td>
+                  <div class="exp-cell">
+                    <span class="exp-value">{{ candidate.experienceYears ?? 0 }} yr(s)</span>
+                  </div>
+                </td>
+
+                <!-- Column 5: Education -->
+                <td>
+                  <span class="education-text">{{ candidate.education || 'N/A' }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- 4. NO MATCHES FOUND (Filtered out by threshold) -->
+  @else {
+    <div class="glass-card empty-state-card">
+      <div class="empty-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+        </svg>
+      </div>
+      <h3 class="empty-title">No Candidates Meet {{ minMatchScore }}% Match</h3>
+      <p class="empty-description">
+        None of your uploaded resumes reached the selected score threshold for this role. Try lowering the match slider.
+      </p>
+    </div>
+  }
+</div>

@@ -1,0 +1,119 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <div class="glass-card modal-container">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <div class="header-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+      </div>
+      <div>
+        <h3 class="modal-title">Bulk Resume Uploader</h3>
+        <p class="modal-subtitle">Upload PDF/DOCX resumes for OCR & AI parsing</p>
+      </div>
+      <button class="close-btn" (click)="closeModal.emit()">×</button>
+    </div>
+
+    <!-- Dropzone (if not uploading or idle) -->
+    @if (!isUploading() && !isProcessing()) {
+      <div
+        class="dropzone"
+        [class.drag-active]="isDragging"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        (click)="fileInput.click()">
+        <input
+          #fileInput
+          type="file"
+          multiple
+          accept=".pdf,.docx,.doc"
+          class="hidden-input"
+          (change)="onFilesSelected($event)" />
+
+        <div class="dropzone-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="12" y1="18" x2="12" y2="12"></line>
+            <line x1="9" y1="15" x2="12" y2="12"></line>
+            <line x1="15" y1="15" x2="12" y2="12"></line>
+          </svg>
+        </div>
+        <h4 class="dropzone-title">Click to upload or drag and drop</h4>
+        <p class="dropzone-subtitle">PDF, DOCX, or DOC files up to 10MB each</p>
+      </div>
+    }
+
+    <!-- Selected Files & Live SSE Progress List -->
+    @if (selectedFiles().length > 0) {
+      <div class="file-list-container">
+        <!-- Progress Bar if Processing -->
+        @if (isProcessing()) {
+          <div class="progress-section">
+            <div class="progress-info">
+              <span class="progress-text">Processing Batch ({{ completedCount() }}/{{ selectedFiles().length }})</span>
+              <span class="progress-percent">{{ progressPercentage() }}%</span>
+            </div>
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" [style.width.%]="progressPercentage()"></div>
+            </div>
+          </div>
+        }
+
+        <div class="files-scroll-area">
+          @for (item of selectedFiles(); track item.file.name) {
+            <div class="file-item" [class.file-completed]="item.status === 'COMPLETED'">
+              <div class="file-meta">
+                <span class="file-name">{{ item.file.name }}</span>
+                <span class="file-size">{{ formatFileSize(item.file.size) }}</span>
+              </div>
+
+              <!-- Status Indicators -->
+              <div class="file-status">
+                @if (item.status === 'PENDING') {
+                  <button class="remove-btn" (click)="removeFile(item)">×</button>
+                } @else if (item.status === 'QUEUED') {
+                  <span class="badge badge-info">Queued</span>
+                } @else if (item.status === 'PARSING') {
+                  <span class="badge badge-warning parsing-pulse">Parsing...</span>
+                } @else if (item.status === 'COMPLETED') {
+                  <div class="completed-info">
+                    <span class="badge badge-success">✓ Processed</span>
+                    @if (item.candidateName) {
+                      <span class="extracted-name">{{ item.candidateName }}</span>
+                    }
+                  </div>
+                } @else if (item.status === 'FAILED') {
+                  <span class="badge badge-danger">Failed</span>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      @if (!isProcessing()) {
+        <button class="btn btn-secondary" (click)="closeModal.emit()">Cancel</button>
+        <button
+          class="btn btn-primary"
+          [disabled]="selectedFiles().length === 0 || isUploading()"
+          (click)="startUpload()">
+          @if (isUploading()) {
+            <div class="spinner-sm"></div>
+            <span>Uploading...</span>
+          } @else {
+            <span>Upload {{ selectedFiles().length }} File(s)</span>
+          }
+        </button>
+      } @else if (isBatchDone()) {
+        <button class="btn btn-primary" (click)="onFinish()">Done & Refresh</button>
+      }
+    </div>
+  </div>
+</div>
