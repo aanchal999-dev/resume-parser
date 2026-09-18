@@ -1,0 +1,173 @@
+services:
+  # ==============================================================================
+  # 1. Relational Database Service (MySQL 8.0)
+  # ==============================================================================
+  mysql:
+    image: mysql:8.0
+    container_name: resume_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "${MYSQL_HOST_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - resume_net
+
+  # ==============================================================================
+  # 2. In-Memory Queue Store & Pub/Sub (Redis 7)
+  # ==============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: resume_redis
+    restart: always
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - resume_net
+
+  # ==============================================================================
+  # 3. S3-Compatible Object Storage (MinIO)
+  # ==============================================================================
+  minio:
+    image: minio/minio:RELEASE.2024-01-18T22-51-28Z
+    container_name: resume_minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - resume_net
+
+  # ==============================================================================
+  # 4. Backend REST API Microservice (Node.js Express + Prisma)
+  # ==============================================================================
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: resume_api
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DATABASE_URL: "mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+    ports:
+      - "3000:3000"
+    networks:
+      - resume_net
+
+  # ==============================================================================
+  # 5. Background Document Processing & OCR Worker (BullMQ + Tesseract)
+  # ==============================================================================
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    container_name: resume_worker
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+      api:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME}
+    networks:
+      - resume_net
+
+  # ==============================================================================
+  # 6. Frontend Application (Angular 18 SPA on Nginx)
+  # ==============================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: resume_frontend
+    restart: none
+    networks:
+      - resume_net
+    volumes:
+      - frontend_build:/app/dist/frontend/browser
+
+  # ==============================================================================
+  # 7. Nginx Reverse Proxy API Gateway (Public Ingress on Port 80)
+  # ==============================================================================
+  gateway:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: resume_gateway
+    restart: always
+    ports:
+      - "${GATEWAY_PORT:-8080}:80"
+    depends_on:
+      - frontend
+      - api
+    networks:
+      - resume_net
+    volumes:
+      - frontend_build:/usr/share/nginx/html
+
+# ==============================================================================
+# Shared Networks & Persistent Volumes
+# ==============================================================================
+networks:
+  resume_net:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+  minio_data:
+  frontend_build:
